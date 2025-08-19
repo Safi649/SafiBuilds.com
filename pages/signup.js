@@ -1,65 +1,56 @@
-import { useState } from "react"
-import { useRouter } from "next/router"
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, updateProfile } from "firebase/auth"
-import { doc, setDoc } from "firebase/firestore"
-import { auth, db } from "../firebase" // <- updated firebase.js
+import { useState } from "react";
+import { useRouter } from "next/router";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/firebase"; // adjust path
 
 export default function Signup() {
-  const router = useRouter()
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleSignup = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
-      await updateProfile(userCredential.user, { displayName: name })
-
-      // Save user info to Firestore
-      await setDoc(doc(db, "users", userCredential.user.uid), {
-        name: name,
-        email: email,
-        plan: "Free",
-        createdAt: new Date(),
-        savedTemplates: [],
-      })
-
-      router.push("/dashboard")
+      await createUserWithEmailAndPassword(auth, email, password);
+      // ✅ Redirect user to login after signup
+      router.push("/login");
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
     }
-  }
-
-  const handleGoogleSignup = async () => {
-    const provider = new GoogleAuthProvider()
-    try {
-      await signInWithPopup(auth, provider)
-      router.push("/dashboard")
-    } catch (err) {
-      setError(err.message)
-    }
-  }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full bg-white p-8 rounded shadow">
-        <h1 className="text-2xl font-bold mb-6 text-center">Sign Up</h1>
-        {error && <p className="text-red-600 mb-4">{error}</p>}
-        <form onSubmit={handleSignup} className="space-y-4">
-          <input type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} required className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600"/>
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600"/>
-          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600"/>
-          <button type="submit" className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Sign Up</button>
-        </form>
-        <button onClick={handleGoogleSignup} className="w-full mt-4 px-4 py-2 border rounded flex items-center justify-center gap-2 hover:bg-gray-100 transition">
-          Sign Up with Google
+    <div className="flex justify-center items-center min-h-screen bg-gray-50">
+      <form
+        onSubmit={handleSignup}
+        className="bg-white p-8 shadow-md rounded w-full max-w-sm"
+      >
+        <h2 className="text-2xl font-bold mb-6 text-center">Sign Up</h2>
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full p-2 mb-4 border rounded"
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full p-2 mb-4 border rounded"
+          required
+        />
+        <button
+          type="submit"
+          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+        >
+          Sign Up
         </button>
-        <p className="mt-4 text-center">
-          Already have an account? <a href="/login" className="text-blue-600 hover:underline">Login</a>
-        </p>
-      </div>
+      </form>
     </div>
-  )
+  );
 }
