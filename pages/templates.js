@@ -1,61 +1,84 @@
-import TemplateCard from "../components/TemplateCard"
+import PrivateRoute from "../components/PrivateRoute"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/router"
+import { auth, db } from "../firebase"
+import { doc, updateDoc, arrayUnion, getDoc } from "firebase/firestore"
 
-export default function Templates() {
-  // Sample template data grouped by categories
-  const categories = [
-    {
-      name: "Business",
-      templates: [
-        { id: 1, title: "Business Pro", image: "/templates/business1.jpg" },
-        { id: 2, title: "Business Lite", image: "/templates/business2.jpg" },
-      ],
-    },
-    {
-      name: "Doctor",
-      templates: [
-        { id: 3, title: "Doctor Care", image: "/templates/doctor1.jpg" },
-        { id: 4, title: "Clinic Plus", image: "/templates/doctor2.jpg" },
-      ],
-    },
-    {
-      name: "Restaurant",
-      templates: [
-        { id: 5, title: "Restaurant Deluxe", image: "/templates/restaurant1.jpg" },
-        { id: 6, title: "Cafe Modern", image: "/templates/restaurant2.jpg" },
-      ],
-    },
-    {
-      name: "SaaS",
-      templates: [
-        { id: 7, title: "SaaS Starter", image: "/templates/saas1.jpg" },
-        { id: 8, title: "SaaS Pro", image: "/templates/saas2.jpg" },
-      ],
-    },
-    {
-      name: "Portfolio",
-      templates: [
-        { id: 9, title: "Portfolio Modern", image: "/templates/portfolio1.jpg" },
-        { id: 10, title: "Portfolio Classic", image: "/templates/portfolio2.jpg" },
-      ],
-    },
-  ]
+const templatesData = [
+  { id: 1, title: "Business Pro", type: "Free", image: "/templates/business.png" },
+  { id: 2, title: "Portfolio Starter", type: "Free", image: "/templates/portfolio.png" },
+  { id: 3, title: "SaaS Pro", type: "Free", image: "/templates/saas.png" },
+  { id: 4, title: "E-commerce Plus", type: "Pro", image: "/templates/ecommerce.png" },
+  { id: 5, title: "Premium Agency", type: "Premium", image: "/templates/agency.png" },
+  // add more templates here
+]
+
+function TemplatesContent() {
+  const router = useRouter()
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (auth.currentUser) {
+        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid))
+        if (userDoc.exists()) setUser(userDoc.data())
+      }
+    }
+    fetchUser()
+  }, [])
+
+  const handleSaveTemplate = async (template) => {
+    if (!user) return
+    const allowedTemplates = user.plan === "Free" ? 3 : user.plan === "Pro" ? 10 : 100
+    if (user.savedTemplates.length >= allowedTemplates) {
+      alert(`Your plan allows only ${allowedTemplates} templates. Upgrade to save more.`)
+      return
+    }
+
+    await updateDoc(doc(db, "users", auth.currentUser.uid), {
+      savedTemplates: arrayUnion({
+        templateId: template.id,
+        title: template.title,
+        savedAt: new Date(),
+      }),
+    })
+    alert(`Template "${template.title}" saved!`)
+  }
 
   return (
-    <div className="space-y-16 max-w-7xl mx-auto px-4 py-12">
-
-      <h1 className="text-4xl font-bold text-center mb-8">Templates</h1>
-
-      {categories.map((cat) => (
-        <section key={cat.name}>
-          <h2 className="text-2xl font-semibold mb-6">{cat.name}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {cat.templates.map((temp) => (
-              <TemplateCard key={temp.id} title={temp.title} image={temp.image} />
-            ))}
+    <div className="min-h-screen bg-gray-50 p-8">
+      <h1 className="text-3xl font-bold mb-6 text-center">Choose a Template</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {templatesData.map((template) => (
+          <div key={template.id} className="bg-white rounded shadow p-4 flex flex-col">
+            <img src={template.image} alt={template.title} className="rounded mb-4 h-40 object-cover"/>
+            <h2 className="text-xl font-semibold mb-2">{template.title}</h2>
+            <p className="mb-4 text-gray-600">Plan: {template.type}</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleSaveTemplate(template)}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => router.push(`/preview/${template.id}`)}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+              >
+                Preview
+              </button>
+            </div>
           </div>
-        </section>
-      ))}
-
+        ))}
+      </div>
     </div>
+  )
+}
+
+export default function TemplatesPage() {
+  return (
+    <PrivateRoute>
+      <TemplatesContent />
+    </PrivateRoute>
   )
 }
