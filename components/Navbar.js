@@ -86,10 +86,10 @@ export default function Navbar() {
                 Login
               </Link>
               <Link
-                href="/register"
+                href="/signup"
                 className="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
               >
-                Register
+                Signup
               </Link>
             </>
           )}
@@ -164,11 +164,11 @@ export default function Navbar() {
                   Login
                 </Link>
                 <Link
-                  href="/register"
+                  href="/signup"
                   onClick={() => setOpen(false)}
                   className="block px-2 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-700"
                 >
-                  Register
+                  Signup
                 </Link>
               </>
             )}
