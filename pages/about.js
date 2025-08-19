@@ -1,62 +1,43 @@
-import { motion } from 'framer-motion'
-
-export default function About() {
+export default function AboutPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-16 space-y-16">
-
-      {/* About Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="text-center"
-      >
-        <h1 className="text-4xl font-bold mb-4">About SafiBuilds</h1>
-        <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-          SafiBuilds is your all-in-one website builder platform. Whether you want to use ready-made templates or start from scratch, SafiBuilds makes it effortless to create, customize, and publish professional websites.
+    <div className="min-h-screen bg-gray-100 p-8">
+      <div className="max-w-5xl mx-auto bg-white rounded shadow p-8 space-y-8">
+        <h1 className="text-4xl font-bold text-center">About SafiBuilds</h1>
+        <p className="text-gray-700 text-lg text-center">
+          SafiBuilds is a modern all-in-one website building platform that empowers individuals and businesses to create beautiful, responsive websites easily.
         </p>
-      </motion.div>
 
-      {/* Mission & Vision */}
-      <div className="grid md:grid-cols-2 gap-12">
-        <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          className="bg-blue-50 p-8 rounded shadow"
-        >
-          <h2 className="text-2xl font-semibold mb-4">Our Mission</h2>
-          <p>
-            To empower individuals and businesses to easily create their online presence without any coding knowledge.
-          </p>
-        </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+          {/* Profile Picture */}
+          <div className="flex justify-center md:justify-start">
+            <img
+              src="/images/your-photo.jpg" // <-- replace with your image path
+              alt="M Abbas Safi"
+              className="rounded-full w-40 h-40 object-cover shadow-lg"
+            />
+          </div>
 
-        <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          className="bg-blue-50 p-8 rounded shadow"
-        >
-          <h2 className="text-2xl font-semibold mb-4">Our Vision</h2>
-          <p>
-            To become the most user-friendly, modern, and reliable website building platform, helping everyone bring their ideas online.
-          </p>
-        </motion.div>
+          {/* Mission & Vision */}
+          <div className="md:col-span-2 space-y-4">
+            <div>
+              <h2 className="text-2xl font-semibold">Our Mission</h2>
+              <p className="text-gray-700">
+                To provide an intuitive platform where anyone can build professional websites effortlessly, with or without coding experience.
+              </p>
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold">Our Vision</h2>
+              <p className="text-gray-700">
+                To become the leading website-building solution globally, enabling creativity and digital growth for all users.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center mt-8">
+          <p className="text-gray-600">© 2025 SafiBuilds. All rights reserved.</p>
+        </div>
       </div>
-
-      {/* Team Placeholder */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="text-center"
-      >
-        <h2 className="text-3xl font-bold mb-6">Our Team</h2>
-        <p className="text-gray-700 max-w-2xl mx-auto">
-          Our team is passionate about web development and design, dedicated to creating the best tools for our users. (Team photos or details can be added later.)
-        </p>
-      </motion.div>
-
     </div>
   )
 }
