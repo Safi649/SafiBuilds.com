@@ -1,10 +1,7 @@
-// 📁 firebase.js
-import { initializeApp, getApps, getApp } from "firebase/app"
-import { getAuth } from "firebase/auth"
-import { getFirestore } from "firebase/firestore"
-import { getAnalytics } from "firebase/analytics"
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
-// Your Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDZFgNm5m6H4sMICbJDRlOrFyfzCjZXgas",
   authDomain: "safibuilds-com.firebaseapp.com",
@@ -13,12 +10,21 @@ const firebaseConfig = {
   messagingSenderId: "65042522437",
   appId: "1:65042522437:web:a19502b9a284ea2938de2c",
   measurementId: "G-V5BNSK5BMY"
+};
+
+// Initialize Firebase App
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
+// Firebase services
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let analytics;
+if (typeof window !== "undefined") {
+  // Only initialize Analytics on the client
+  import("firebase/analytics").then((module) => {
+    analytics = module.getAnalytics(app);
+  });
 }
 
-// Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
-const auth = getAuth(app)
-const db = getFirestore(app)
-const analytics = getAnalytics(app)
-
-export { app, auth, db, analytics }
+export { app, auth, db, analytics };
