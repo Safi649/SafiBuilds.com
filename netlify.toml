@@ -1,0 +1,16 @@
+[build]
+  publish = ".next"
+  command = "npm run build"
+
+[dev]
+  command = "npm run dev"
+  port = 3000
+
+[build.environment]
+  NEXT_PUBLIC_FIREBASE_API_KEY = "AIzaSyDZFgNm5m6H4sMICbJDRlOrFyfzCjZXgas"
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = "safibuilds-com.firebaseapp.com"
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID = "safibuilds-com"
+  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET = "safibuilds-com.firebasestorage.app"
+  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID = "65042522437"
+  NEXT_PUBLIC_FIREBASE_APP_ID = "1:65042522437:web:a19502b9a284ea2938de2c"
+  NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID = "G-V5BNSK5BMY"
