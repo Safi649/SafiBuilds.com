@@ -1,75 +1,89 @@
-import PrivateRoute from "../components/PrivateRoute"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/router"
-import { useState, useEffect } from "react"
+import PrivateRoute from "../components/PrivateRoute"
 import { auth, db } from "../firebase"
 import { doc, getDoc, signOut } from "firebase/firestore"
 
-function DashboardContent() {
+export default function DashboardPage() {
   const router = useRouter()
-  const [user, setUser] = useState(null)
+  const [userData, setUserData] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchUser = async () => {
       if (auth.currentUser) {
         const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid))
         if (userDoc.exists()) {
-          setUser(userDoc.data())
+          setUserData(userDoc.data())
         }
       }
+      setLoading(false)
     }
     fetchUser()
   }, [])
 
   const handleLogout = async () => {
-    await signOut(auth)
+    await auth.signOut()
     router.push("/login")
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <h1 className="text-4xl font-bold mb-4">Dashboard</h1>
+  if (loading) return <p className="text-center mt-16">Loading Dashboard...</p>
 
-        {user && (
-          <div className="bg-white p-6 rounded shadow space-y-2">
-            <p><strong>Name:</strong> {user.name}</p>
-            <p><strong>Email:</strong> {user.email}</p>
-            <p><strong>Plan:</strong> {user.plan}</p>
-            <button onClick={() => router.push("/pricing")} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Upgrade Plan</button>
-          </div>
-        )}
-
-        <div className="bg-white p-6 rounded shadow text-center">
-          <h2 className="text-2xl font-semibold mb-4">Start from Blank Template</h2>
-          <p className="mb-4">Click below to start building your website from a true blank canvas.</p>
-          <button onClick={() => router.push("/blank")} className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 transition">Start Editing</button>
-        </div>
-
-        <div className="bg-white p-6 rounded shadow">
-          <h2 className="text-2xl font-semibold mb-4">Your Saved Websites</h2>
-          {user && user.savedTemplates && user.savedTemplates.length > 0 ? (
-            <ul>
-              {user.savedTemplates.map((template, idx) => (
-                <li key={idx}>{template.title}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-600">You have no saved websites yet.</p>
-          )}
-        </div>
-
-        <div className="text-center">
-          <button onClick={handleLogout} className="px-6 py-3 bg-red-600 text-white rounded hover:bg-red-700 transition">Logout</button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-export default function DashboardPage() {
   return (
     <PrivateRoute>
-      <DashboardContent />
+      <div className="min-h-screen bg-gray-100 p-8">
+        <div className="max-w-5xl mx-auto bg-white rounded shadow p-8 space-y-8">
+          <h1 className="text-3xl font-bold text-center">Dashboard</h1>
+
+          {/* Profile Info */}
+          {userData && (
+            <div className="border p-4 rounded bg-gray-50 space-y-2">
+              <p><strong>Name:</strong> {userData.name}</p>
+              <p><strong>Email:</strong> {userData.email}</p>
+              <p><strong>Plan:</strong> {userData.plan}</p>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex flex-col md:flex-row gap-4">
+            <button
+              onClick={() => router.push("/blank")}
+              className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            >
+              Blank Template
+            </button>
+            <button
+              onClick={() => router.push("/pricing")}
+              className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 transition"
+            >
+              Upgrade Plan
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-6 py-3 bg-red-600 text-white rounded hover:bg-red-700 transition"
+            >
+              Logout
+            </button>
+          </div>
+
+          {/* Saved Templates */}
+          {userData && userData.savedTemplates && userData.savedTemplates.length > 0 ? (
+            <div className="mt-8">
+              <h2 className="text-2xl font-semibold mb-4">Saved Templates</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {userData.savedTemplates.map((t) => (
+                  <div key={t.templateId} className="border rounded p-4 bg-gray-50">
+                    <h3 className="font-semibold">{t.title}</h3>
+                    <p className="text-sm text-gray-500">{new Date(t.savedAt.seconds * 1000).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="mt-8 text-gray-600 text-center">You have not saved any templates yet.</p>
+          )}
+        </div>
+      </div>
     </PrivateRoute>
   )
 }
