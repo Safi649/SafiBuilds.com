@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import TemplateCard from '../components/TemplateCard'
+import Layout from "../components/Layout";
 
 export default function Home() {
   // Sample templates for preview carousel
