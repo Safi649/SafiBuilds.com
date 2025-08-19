@@ -1,95 +1,72 @@
-import { useEffect, useState } from "react"
-import { useRouter } from "next/router"
-import PrivateRoute from "../components/PrivateRoute"
-import { auth, db } from "../firebase"
-import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore"
+// 📁 pages/templates.js
+import { useEffect, useState } from "react";
+import { db } from "../firebase";
+import { collection, getDocs } from "firebase/firestore";
 
-const templateData = [
-  { id: "t1", title: "Business Template", img: "/templates/business.jpg" },
-  { id: "t2", title: "Portfolio Template", img: "/templates/portfolio.jpg" },
-  { id: "t3", title: "SaaS Template", img: "/templates/saas.jpg" },
-  { id: "t4", title: "Restaurant Template", img: "/templates/restaurant.jpg" },
-  { id: "t5", title: "Doctor Template", img: "/templates/doctor.jpg" },
-  { id: "t6", title: "Hospital Template", img: "/templates/hospital.jpg" },
-]
-
-export default function TemplatesPage() {
-  const router = useRouter()
-  const [userData, setUserData] = useState(null)
+export default function Templates() {
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      if (auth.currentUser) {
-        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid))
-        if (userDoc.exists()) {
-          setUserData(userDoc.data())
-        }
+    const fetchTemplates = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "Templates"));
+        const data = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setTemplates(data);
+      } catch (error) {
+        console.error("Error fetching templates: ", error);
+      } finally {
+        setLoading(false);
       }
-    }
-    fetchUser()
-  }, [])
+    };
+    fetchTemplates();
+  }, []);
 
-  const handleSaveTemplate = async (template) => {
-    if (!userData) return
-
-    const planLimit = userData.plan === "Free" ? 3 : userData.plan === "Pro" ? 10 : 100
-    const savedCount = userData.savedTemplates ? userData.savedTemplates.length : 0
-
-    if (savedCount >= planLimit) {
-      alert(`Your plan allows only ${planLimit} templates. Upgrade to save more.`)
-      return
-    }
-
-    const newTemplate = {
-      templateId: template.id,
-      title: template.title,
-      savedAt: new Date(),
-    }
-
-    await updateDoc(doc(db, "users", auth.currentUser.uid), {
-      savedTemplates: arrayUnion(newTemplate),
-    })
-
-    alert(`${template.title} saved successfully!`)
-    setUserData({
-      ...userData,
-      savedTemplates: [...(userData.savedTemplates || []), newTemplate],
-    })
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg font-semibold text-gray-600">Loading Templates...</p>
+      </div>
+    );
   }
 
   return (
-    <PrivateRoute>
-      <div className="min-h-screen p-8">
-        <h1 className="text-4xl font-bold text-center mb-8">Available Templates</h1>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {templateData.map((template) => (
-            <div key={template.id} className="border rounded shadow bg-white">
+    <div className="min-h-screen bg-gray-50 p-8">
+      <h1 className="text-3xl font-bold text-center mb-10">Website Templates</h1>
+
+      {templates.length === 0 ? (
+        <p className="text-center text-gray-500">No templates found.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {templates.map((template) => (
+            <div
+              key={template.id}
+              className="bg-white rounded-2xl shadow-md hover:shadow-xl transition p-4"
+            >
               <img
-                src={template.img}
-                alt={template.title}
-                className="w-full h-48 object-cover rounded-t"
+                src={template.thumbnailUrl}
+                alt={template.name}
+                className="rounded-lg mb-4 w-full h-48 object-cover"
               />
-              <div className="p-4 flex flex-col gap-2">
-                <h2 className="text-xl font-semibold">{template.title}</h2>
-                <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={() => router.push(`/preview/${template.id}`)}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                  >
-                    Preview
-                  </button>
-                  <button
-                    onClick={() => handleSaveTemplate(template)}
-                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-                  >
-                    Save
-                  </button>
-                </div>
-              </div>
+              <h2 className="text-xl font-semibold mb-2">{template.name}</h2>
+              <p className="text-gray-600 mb-4">
+                Industry: <span className="font-medium">{template.industry}</span>
+              </p>
+              <a
+                href={template.previewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+              >
+                Preview
+              </a>
             </div>
           ))}
         </div>
-      </div>
-    </PrivateRoute>
-  )
+      )}
+    </div>
+  );
 }
