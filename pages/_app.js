@@ -1,13 +1,13 @@
 // 📁 pages/_app.js
-import '../styles/globals.css'
-import Layout from '../components/Layout'
+import '@/styles/globals.css'   // ✅ Import Tailwind styles
 
-function MyApp({ Component, pageProps }) {
+// This is the custom App component in Next.js
+// It wraps all pages with global providers, styles, etc.
+export default function App({ Component, pageProps }) {
   return (
-    <Layout>
+    <>
+      {/* You can add global components like Navbar/Footer here if needed */}
       <Component {...pageProps} />
-    </Layout>
+    </>
   )
 }
-
-export default MyApp
