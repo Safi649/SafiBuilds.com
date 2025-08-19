@@ -1,84 +1,96 @@
-import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
+import { useRouter } from "next/router"
 import PrivateRoute from "../../components/PrivateRoute"
 import { auth, db } from "../../firebase"
 import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore"
 
-const templatesData = [
-  { id: 1, title: "Business Pro", type: "Free", image: "/templates/business.png" },
-  { id: 2, title: "Portfolio Starter", type: "Free", image: "/templates/portfolio.png" },
-  { id: 3, title: "SaaS Pro", type: "Free", image: "/templates/saas.png" },
-  { id: 4, title: "E-commerce Plus", type: "Pro", image: "/templates/ecommerce.png" },
-  { id: 5, title: "Premium Agency", type: "Premium", image: "/templates/agency.png" },
+const templateData = [
+  { id: "t1", title: "Business Template", img: "/templates/business.jpg", description: "Professional business website template." },
+  { id: "t2", title: "Portfolio Template", img: "/templates/portfolio.jpg", description: "Showcase your portfolio beautifully." },
+  { id: "t3", title: "SaaS Template", img: "/templates/saas.jpg", description: "Modern SaaS landing page template." },
+  { id: "t4", title: "Restaurant Template", img: "/templates/restaurant.jpg", description: "Template for restaurants and cafes." },
+  { id: "t5", title: "Doctor Template", img: "/templates/doctor.jpg", description: "Medical and doctor website template." },
+  { id: "t6", title: "Hospital Template", img: "/templates/hospital.jpg", description: "Hospital and healthcare template." },
 ]
 
-function PreviewContent() {
+export default function TemplatePreview() {
   const router = useRouter()
   const { id } = router.query
   const [template, setTemplate] = useState(null)
-  const [user, setUser] = useState(null)
+  const [userData, setUserData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (!id) return
-    const t = templatesData.find((temp) => temp.id === parseInt(id))
-    setTemplate(t)
+    const selected = templateData.find((t) => t.id === id)
+    setTemplate(selected)
   }, [id])
 
   useEffect(() => {
     const fetchUser = async () => {
       if (auth.currentUser) {
         const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid))
-        if (userDoc.exists()) setUser(userDoc.data())
+        if (userDoc.exists()) setUserData(userDoc.data())
       }
+      setLoading(false)
     }
     fetchUser()
   }, [])
 
-  const handleSave = async () => {
-    if (!user || !template) return
-    const allowedTemplates = user.plan === "Free" ? 3 : user.plan === "Pro" ? 10 : 100
-    if (user.savedTemplates.length >= allowedTemplates) {
-      alert(`Your plan allows only ${allowedTemplates} templates. Upgrade to save more.`)
+  const handleSaveTemplate = async () => {
+    if (!userData || !template) return
+
+    const planLimit = userData.plan === "Free" ? 3 : userData.plan === "Pro" ? 10 : 100
+    const savedCount = userData.savedTemplates ? userData.savedTemplates.length : 0
+
+    if (savedCount >= planLimit) {
+      alert(`Your plan allows only ${planLimit} templates. Upgrade to save more.`)
       return
     }
 
-    await updateDoc(doc(db, "users", auth.currentUser.uid), {
-      savedTemplates: arrayUnion({
-        templateId: template.id,
-        title: template.title,
-        savedAt: new Date(),
-      }),
-    })
-    alert(`Template "${template.title}" saved!`)
-    router.push("/dashboard")
+    setSaving(true)
+    try {
+      await updateDoc(doc(db, "users", auth.currentUser.uid), {
+        savedTemplates: arrayUnion({ templateId: template.id, title: template.title, savedAt: new Date() }),
+      })
+      alert(`${template.title} saved successfully!`)
+      setUserData({ ...userData, savedTemplates: [...(userData.savedTemplates || []), { templateId: template.id, title: template.title, savedAt: new Date() }] })
+    } catch (error) {
+      console.error(error)
+      alert("Error saving template. Please try again.")
+    }
+    setSaving(false)
   }
 
-  if (!template) return <p className="text-center mt-16">Loading Template...</p>
+  if (loading || !template) return <p className="text-center mt-16">Loading Preview...</p>
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-4xl mx-auto bg-white rounded shadow p-8">
-        <h1 className="text-3xl font-bold mb-4">{template.title}</h1>
-        <p className="text-gray-600 mb-6">Plan: {template.type}</p>
-        <img src={template.image} alt={template.title} className="rounded mb-6 object-cover w-full h-80"/>
-        
-        <div className="flex gap-4">
-          <button onClick={handleSave} className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 transition">
-            Save Template
+    <PrivateRoute>
+      <div className="min-h-screen p-8 flex flex-col items-center">
+        <h1 className="text-4xl font-bold mb-6">{template.title}</h1>
+        <div className="w-full max-w-5xl border rounded shadow overflow-hidden">
+          <img src={template.img} alt={template.title} className="w-full h-96 object-cover" />
+          <div className="p-4 bg-gray-50">
+            <p className="text-gray-700">{template.description}</p>
+          </div>
+        </div>
+        <div className="mt-6 flex gap-4">
+          <button
+            onClick={handleSaveTemplate}
+            disabled={saving}
+            className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 transition"
+          >
+            {saving ? "Saving..." : "Save Template"}
           </button>
-          <button onClick={() => router.push("/templates")} className="px-6 py-3 bg-gray-600 text-white rounded hover:bg-gray-700 transition">
+          <button
+            onClick={() => router.push("/templates")}
+            className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
             Back to Templates
           </button>
         </div>
       </div>
-    </div>
-  )
-}
-
-export default function PreviewPage() {
-  return (
-    <PrivateRoute>
-      <PreviewContent />
     </PrivateRoute>
   )
 }
