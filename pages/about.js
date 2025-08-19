@@ -11,7 +11,7 @@ export default function AboutPage() {
           {/* Profile Picture */}
           <div className="flex justify-center md:justify-start">
             <img
-              src="/images/your-photo.jpg" // <-- replace with your image path
+              src="/profile.jpg"
               alt="M Abbas Safi"
               className="rounded-full w-40 h-40 object-cover shadow-lg"
             />
