@@ -42,7 +42,10 @@ export default function Navbar() {
         <div className="md:hidden px-4 pb-4 flex flex-col space-y-2 bg-white shadow">
           {links.map((link) => (
             <Link key={link.name} href={link.href}>
-              <a className={`hover:text-blue-600 transition ${router.pathname === link.href ? "text-blue-600 font-semibold" : "text-gray-700"}`} onClick={() => setOpen(false)}>
+              <a
+                className={`hover:text-blue-600 transition ${router.pathname === link.href ? "text-blue-600 font-semibold" : "text-gray-700"}`}
+                onClick={() => setOpen(false)}
+              >
                 {link.name}
               </a>
             </Link>
@@ -52,3 +55,4 @@ export default function Navbar() {
     </nav>
   )
 }
+
