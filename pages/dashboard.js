@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/router"
 import PrivateRoute from "../components/PrivateRoute"
 import { auth, db } from "../firebase"
-import { doc, getDoc, signOut } from "firebase/firestore"
+import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore"
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -13,14 +13,40 @@ export default function DashboardPage() {
     const fetchUser = async () => {
       if (auth.currentUser) {
         const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid))
-        if (userDoc.exists()) {
-          setUserData(userDoc.data())
-        }
+        if (userDoc.exists()) setUserData(userDoc.data())
       }
       setLoading(false)
     }
     fetchUser()
   }, [])
+
+  const handleSaveBlank = async () => {
+    if (!userData) return
+    const planLimit = userData.plan === "Free" ? 3 : userData.plan === "Pro" ? 10 : 100
+    const savedCount = userData.savedTemplates ? userData.savedTemplates.length : 0
+
+    if (savedCount >= planLimit) {
+      alert(`Your plan allows only ${planLimit} templates. Upgrade to save more.`)
+      return
+    }
+
+    const blankTemplate = {
+      templateId: `blank-${new Date().getTime()}`,
+      title: "Blank Template",
+      savedAt: new Date(),
+    }
+
+    await updateDoc(doc(db, "users", auth.currentUser.uid), {
+      savedTemplates: arrayUnion(blankTemplate),
+    })
+
+    setUserData({
+      ...userData,
+      savedTemplates: [...(userData.savedTemplates || []), blankTemplate],
+    })
+
+    alert("Blank template saved successfully!")
+  }
 
   const handleLogout = async () => {
     await auth.signOut()
@@ -31,7 +57,7 @@ export default function DashboardPage() {
 
   return (
     <PrivateRoute>
-      <div className="min-h-screen bg-gray-100 p-8">
+      <div className="min-h-screen p-8 bg-gray-100">
         <div className="max-w-5xl mx-auto bg-white rounded shadow p-8 space-y-8">
           <h1 className="text-3xl font-bold text-center">Dashboard</h1>
 
@@ -64,6 +90,12 @@ export default function DashboardPage() {
             >
               Logout
             </button>
+            <button
+              onClick={handleSaveBlank}
+              className="px-6 py-3 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition"
+            >
+              Save Blank Template
+            </button>
           </div>
 
           {/* Saved Templates */}
@@ -74,7 +106,7 @@ export default function DashboardPage() {
                 {userData.savedTemplates.map((t) => (
                   <div key={t.templateId} className="border rounded p-4 bg-gray-50">
                     <h3 className="font-semibold">{t.title}</h3>
-                    <p className="text-sm text-gray-500">{new Date(t.savedAt.seconds * 1000).toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-500">{new Date(t.savedAt.seconds ? t.savedAt.seconds * 1000 : t.savedAt).toLocaleDateString()}</p>
                   </div>
                 ))}
               </div>
