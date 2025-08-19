@@ -11,13 +11,11 @@ const templateData = [
   { id: "t4", title: "Restaurant Template", img: "/templates/restaurant.jpg" },
   { id: "t5", title: "Doctor Template", img: "/templates/doctor.jpg" },
   { id: "t6", title: "Hospital Template", img: "/templates/hospital.jpg" },
-  // Add more templates as needed
 ]
 
 export default function TemplatesPage() {
   const router = useRouter()
   const [userData, setUserData] = useState(null)
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -27,7 +25,6 @@ export default function TemplatesPage() {
           setUserData(userDoc.data())
         }
       }
-      setLoading(false)
     }
     fetchUser()
   }, [])
@@ -43,14 +40,22 @@ export default function TemplatesPage() {
       return
     }
 
-    await updateDoc(doc(db, "users", auth.currentUser.uid), {
-      savedTemplates: arrayUnion({ templateId: template.id, title: template.title, savedAt: new Date() }),
-    })
-    alert(`${template.title} saved successfully!`)
-    setUserData({ ...userData, savedTemplates: [...(userData.savedTemplates || []), { templateId: template.id, title: template.title, savedAt: new Date() }] })
-  }
+    const newTemplate = {
+      templateId: template.id,
+      title: template.title,
+      savedAt: new Date(),
+    }
 
-  if (loading) return <p className="text-center mt-16">Loading Templates...</p>
+    await updateDoc(doc(db, "users", auth.currentUser.uid), {
+      savedTemplates: arrayUnion(newTemplate),
+    })
+
+    alert(`${template.title} saved successfully!`)
+    setUserData({
+      ...userData,
+      savedTemplates: [...(userData.savedTemplates || []), newTemplate],
+    })
+  }
 
   return (
     <PrivateRoute>
@@ -59,7 +64,11 @@ export default function TemplatesPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {templateData.map((template) => (
             <div key={template.id} className="border rounded shadow bg-white">
-              <img src={template.img} alt={template.title} className="w-full h-48 object-cover rounded-t" />
+              <img
+                src={template.img}
+                alt={template.title}
+                className="w-full h-48 object-cover rounded-t"
+              />
               <div className="p-4 flex flex-col gap-2">
                 <h2 className="text-xl font-semibold">{template.title}</h2>
                 <div className="flex gap-2 mt-2">
