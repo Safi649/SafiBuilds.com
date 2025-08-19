@@ -3,25 +3,34 @@ import { useRouter } from "next/router"
 import PrivateRoute from "../components/PrivateRoute"
 import { auth, db } from "../firebase"
 import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore"
+import { onAuthStateChanged, signOut } from "firebase/auth"
 
 export default function DashboardPage() {
   const router = useRouter()
   const [userData, setUserData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null)
 
+  // ✅ Check Firebase auth state
   useEffect(() => {
-    const fetchUser = async () => {
-      if (auth.currentUser) {
-        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid))
-        if (userDoc.exists()) setUserData(userDoc.data())
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser)
+        const userDoc = await getDoc(doc(db, "users", currentUser.uid))
+        if (userDoc.exists()) {
+          setUserData(userDoc.data())
+        }
+      } else {
+        router.push("/login")
       }
       setLoading(false)
-    }
-    fetchUser()
-  }, [])
+    })
+
+    return () => unsubscribe()
+  }, [router])
 
   const handleSaveBlank = async () => {
-    if (!userData) return
+    if (!userData || !user) return
     const planLimit = userData.plan === "Free" ? 3 : userData.plan === "Pro" ? 10 : 100
     const savedCount = userData.savedTemplates ? userData.savedTemplates.length : 0
 
@@ -36,7 +45,7 @@ export default function DashboardPage() {
       savedAt: new Date(),
     }
 
-    await updateDoc(doc(db, "users", auth.currentUser.uid), {
+    await updateDoc(doc(db, "users", user.uid), {
       savedTemplates: arrayUnion(blankTemplate),
     })
 
@@ -49,10 +58,11 @@ export default function DashboardPage() {
   }
 
   const handleLogout = async () => {
-    await auth.signOut()
+    await signOut(auth)
     router.push("/login")
   }
 
+  // ✅ Show loader while waiting for Firebase
   if (loading) return <p className="text-center mt-16">Loading Dashboard...</p>
 
   return (
@@ -106,13 +116,19 @@ export default function DashboardPage() {
                 {userData.savedTemplates.map((t) => (
                   <div key={t.templateId} className="border rounded p-4 bg-gray-50">
                     <h3 className="font-semibold">{t.title}</h3>
-                    <p className="text-sm text-gray-500">{new Date(t.savedAt.seconds ? t.savedAt.seconds * 1000 : t.savedAt).toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-500">
+                      {new Date(
+                        t.savedAt.seconds ? t.savedAt.seconds * 1000 : t.savedAt
+                      ).toLocaleDateString()}
+                    </p>
                   </div>
                 ))}
               </div>
             </div>
           ) : (
-            <p className="mt-8 text-gray-600 text-center">You have not saved any templates yet.</p>
+            <p className="mt-8 text-gray-600 text-center">
+              You have not saved any templates yet.
+            </p>
           )}
         </div>
       </div>
