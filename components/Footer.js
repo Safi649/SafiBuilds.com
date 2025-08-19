@@ -9,6 +9,7 @@ export default function Footer() {
         <div>
           <h2 className="text-xl font-bold mb-2">Contact</h2>
           <p className="text-gray-300">Email: safi65225@gmail.com</p>
+          <p className="text-gray-300">Alternate: muhammadabbassafi332@gmail.com</p>
           <p className="text-gray-300">Phone: +923489085366</p>
           <p className="text-gray-300">Location: Swabi, KPK, Pakistan</p>
         </div>
