@@ -3,30 +3,26 @@ import { useRouter } from "next/router"
 import PrivateRoute from "../components/PrivateRoute"
 import { auth, db } from "../firebase"
 import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore"
-import { onAuthStateChanged, signOut } from "firebase/auth"
+import { signOut } from "firebase/auth"
 
 export default function DashboardPage() {
   const router = useRouter()
   const [userData, setUserData] = useState(null)
-  const [loading, setLoading] = useState(true)
   const [user, setUser] = useState(null)
 
-  // ✅ Check Firebase auth state
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser)
-        const userDoc = await getDoc(doc(db, "users", currentUser.uid))
+    const fetchUser = async () => {
+      if (auth.currentUser) {
+        setUser(auth.currentUser)
+        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid))
         if (userDoc.exists()) {
           setUserData(userDoc.data())
         }
       } else {
         router.push("/login")
       }
-      setLoading(false)
-    })
-
-    return () => unsubscribe()
+    }
+    fetchUser()
   }, [router])
 
   const handleSaveBlank = async () => {
@@ -40,7 +36,7 @@ export default function DashboardPage() {
     }
 
     const blankTemplate = {
-      templateId: `blank-${new Date().getTime()}`,
+      templateId: `blank-${Date.now()}`,
       title: "Blank Template",
       savedAt: new Date(),
     }
@@ -61,9 +57,6 @@ export default function DashboardPage() {
     await signOut(auth)
     router.push("/login")
   }
-
-  // ✅ Show loader while waiting for Firebase
-  if (loading) return <p className="text-center mt-16">Loading Dashboard...</p>
 
   return (
     <PrivateRoute>
