@@ -1,7 +1,9 @@
+// firebase.js
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { auth } from '../firebase';
+
+// ✅ DO NOT import { auth } from '../firebase'; (causes recursive import!)
 
 const firebaseConfig = {
   apiKey: "AIzaSyDZFgNm5m6H4sMICbJDRlOrFyfzCjZXgas",
@@ -13,7 +15,7 @@ const firebaseConfig = {
   measurementId: "G-V5BNSK5BMY"
 };
 
-// Initialize Firebase App
+// Initialize Firebase App (only once)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 // Firebase services
